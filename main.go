@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt",
-	"net/http"
+    "fmt"
+    "net/http"
 )
 
-func HandlerFunc(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "<h1>Hello, 这里是 goblog</h1>")
+func handlerFunc(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprint(w, "<h1>Hello, 这里是 goblog</h1>")
 }
 
-func main()  {
-	http.HandleFunc("/",HandlerFunc)
-	http.ListenAndServer(":3000",nil)
+func main() {
+    http.HandleFunc("/", handlerFunc)
+    http.ListenAndServe(":3000", nil)
 }
