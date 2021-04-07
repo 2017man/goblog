@@ -28,14 +28,14 @@ func main() {
 	router.HandleFunc("/", defaultHandler)
 	// 关于页
 	// 列表 or 创建
-    router.HandleFunc("/articles", func(w http.ResponseWriter, r *http.Request) {
-        switch r.Method {
-        case "GET":
-            fmt.Fprint(w, "访问文章列表")
-        case "POST":
-            fmt.Fprint(w, "创建新的文章")
-        }
-    })
+	router.HandleFunc("/articles", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			fmt.Fprint(w, "访问文章列表")
+		case "POST":
+			fmt.Fprint(w, "创建新的文章")
+		}
+	})
 	// 关于页
 	router.HandleFunc("/about", aboutHandler)
 	http.ListenAndServe(":4000", router)
