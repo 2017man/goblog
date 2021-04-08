@@ -58,11 +58,19 @@ func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
 	</html>
 	`
 	storeURL, _ := router.Get("articles.store").URL()
-	fmt.Fprintf(w, html,storeURL)
+	fmt.Fprintf(w, html, storeURL)
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "创建新的文章")
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Fprint(w, "请提交正确的数据")
+		return
+	}
+	fmt.Fprintf(w, "Postform %v <br>", r.Form)
+	fmt.Fprintf(w, "Postform %v <br>", r.PostForm)
+	fmt.Fprintf(w, "Postform %v <br>", r.FormValue("title"))
+	fmt.Fprintf(w, "Postform %v <br>", r.PostFormValue("title"))
 }
 
 func forceHTMLMiddleware(next http.Handler) http.Handler {
