@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gorilla/mux"
 )
@@ -62,15 +63,34 @@ func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		fmt.Fprint(w, "请提交正确的数据")
-		return
+	title := r.PostFormValue("title")
+	body := r.PostFormValue("body")
+	errors := make(map[string]string)
+
+	if title == "" {
+		errors["title"] = "标题不能为空"
+	} else if utf8.RuneCountInString(title) < 3 || len(title) > 40 {
+		errors["title"] = "标题长度需介于 3-40"
 	}
-	fmt.Fprintf(w, "Postform %v <br>", r.Form)
-	fmt.Fprintf(w, "Postform %v <br>", r.PostForm)
-	fmt.Fprintf(w, "Postform %v <br>", r.FormValue("title"))
-	fmt.Fprintf(w, "Postform %v <br>", r.PostFormValue("title"))
+
+	// 验证内容
+	if body == "" {
+		errors["body"] = "内容不能为空"
+	} else if utf8.RuneCountInString(body) < 10 {
+		errors["body"] = "内容长度需大于或等于 10 个字节"
+	}
+
+	if len(errors) == 0 {
+		fmt.Fprint(w, "验证通过!<br>")
+		fmt.Fprintf(w, "title 的值为: %v <br>", title)
+		fmt.Fprintf(w, "title 的长度为: %v <br>", utf8.RuneCountInString(title))
+		fmt.Fprintf(w, "body 的值为: %v <br>", body)
+		fmt.Fprintf(w, "body 的长度为: %v <br>", utf8.RuneCountInString(body))
+
+	} else {
+		fmt.Fprintf(w, "有错误发生，errors 的值为: %v <br>", errors)
+	}
+
 }
 
 func forceHTMLMiddleware(next http.Handler) http.Handler {
