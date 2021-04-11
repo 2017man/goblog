@@ -144,6 +144,17 @@ func checkError(err error) {
 	}
 }
 
+func createTables() {
+	createArticlesSQL := `CREATE TABLE IF NOT EXISTS articles(
+    id bigint(20) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    title varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+    body longtext COLLATE utf8mb4_unicode_ci
+); `
+
+	_, err := db.Exec(createArticlesSQL)
+	checkError(err)
+}
+
 func initDB() {
 	var err error
 	config := mysql.Config{
@@ -174,6 +185,8 @@ func initDB() {
 func main() {
 	//数据库初始化
 	initDB()
+	//创建数据表
+	createTables()
 	// 主页
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	// 关于页
