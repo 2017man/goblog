@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -97,6 +98,15 @@ func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "title 的长度为: %v <br>", utf8.RuneCountInString(title))
 		fmt.Fprintf(w, "body 的值为: %v <br>", body)
 		fmt.Fprintf(w, "body 的长度为: %v <br>", utf8.RuneCountInString(body))
+		//入库
+		lastInsertID, err := saveArticleToDB(title, body)
+		if lastInsertID > 0 {
+			fmt.Fprint(w, "插入成功，ID为"+strconv.FormatInt(lastInsertID, 10))
+		} else {
+			checkError(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprint(w, "500 服务器内部错误")
+		}
 
 	} else {
 		storeURL, _ := router.Get("articles.store").URL()
@@ -142,6 +152,30 @@ func checkError(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func saveArticleToDB(title string, body string) (int64, error) {
+	//获取一个prepare 声明语句
+	stmt, err := db.Prepare("INSERT INTO articles (title, body) VALUES(?,?)")
+	//例行检查错误
+	if err != nil {
+		return 0, err
+	}
+	//关闭此链接
+	defer stmt.Close()
+
+	//插入数据
+	rs, err := stmt.Exec(title, body)
+	if err != nil {
+		return 0, err
+	}
+
+	//4.插入成功
+	id, err := rs.LastInsertId()
+	if id > 0 {
+		return id, nil
+	}
+	return 0, err
 }
 
 func createTables() {
