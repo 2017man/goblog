@@ -58,13 +58,10 @@ type Article struct {
 }
 
 func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
-	//1.获取url 参数
-	vars := mux.Vars(r)
-	id := vars["id"]
-	//2.从数据库读取对应文章数据
-	article := Article{}
-	query := "select * from articles where id=?"
-	err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
+	// 1.获取url参数
+	id := getRouteVariable("id", r)
+	// 2. 读取对应的文章数据
+	article, err := getArticleByID(id)
 	//3.错误处理
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -103,13 +100,10 @@ func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesEditHandler(w http.ResponseWriter, r *http.Request) {
-	//获取参数
-	vars := mux.Vars(r)
-	id := vars["id"]
-	//查询数据
-	article := Article{}
-	query := "select * from articles where id=?"
-	err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
+	// 1.获取url参数
+	id := getRouteVariable("id", r)
+	// 2. 读取对应的文章数据
+	article, err := getArticleByID(id)
 	updateURL, _ := router.Get("articles.update").URL("id", id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -137,14 +131,10 @@ func articlesEditHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
-	//获取url参数
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	//2.从数据库读取对应文章数据
-	article := Article{}
-	query := "select * from articles where id=?"
-	err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
+	// 1.获取url参数
+	id := getRouteVariable("id", r)
+	// 2. 读取对应的文章数据
+	_, err := getArticleByID(id)
 	//3.如果出现错误
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -160,20 +150,8 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		// 4.1获取表单数据并验证
 		title := r.PostFormValue("title")
 		body := r.PostFormValue("body")
-		errors := make(map[string]string)
 
-		if title == "" {
-			errors["title"] = "标题不能为空"
-		} else if utf8.RuneCountInString(title) < 3 || len(title) > 40 {
-			errors["title"] = "标题长度需介于 3-40"
-		}
-
-		// 验证内容
-		if body == "" {
-			errors["body"] = "内容不能为空"
-		} else if utf8.RuneCountInString(body) < 10 {
-			errors["body"] = "内容长度需大于或等于 10 个字节"
-		}
+		errors := validateArticleFormData(title, body)
 
 		if len(errors) == 0 {
 			// 4.2 表单验证通过，更新数据
@@ -212,22 +190,11 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
+
 	title := r.PostFormValue("title")
 	body := r.PostFormValue("body")
-	errors := make(map[string]string)
 
-	if title == "" {
-		errors["title"] = "标题不能为空"
-	} else if utf8.RuneCountInString(title) < 3 || len(title) > 40 {
-		errors["title"] = "标题长度需介于 3-40"
-	}
-
-	// 验证内容
-	if body == "" {
-		errors["body"] = "内容不能为空"
-	} else if utf8.RuneCountInString(body) < 10 {
-		errors["body"] = "内容长度需大于或等于 10 个字节"
-	}
+	errors := validateArticleFormData(title, body)
 
 	if len(errors) == 0 {
 		fmt.Fprint(w, "验证通过!<br>")
@@ -261,7 +228,6 @@ func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 
 		tmpl.Execute(w, data)
 	}
-
 }
 
 func forceHTMLMiddleware(next http.Handler) http.Handler {
@@ -324,6 +290,41 @@ func createTables() {
 
 	_, err := db.Exec(createArticlesSQL)
 	checkError(err)
+}
+
+// 封装--获取url路径参数
+func getRouteVariable(parameterName string, r *http.Request) string {
+	//获取url参数
+	vars := mux.Vars(r)
+	return vars[parameterName]
+}
+
+// 封装--通过文章id获取详情
+func getArticleByID(id string) (Article, error) {
+	article := Article{}
+	query := "SELECT * FROM articles WHERE id = ?"
+	err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
+	return article, err
+}
+
+// 封装--验证文章参数
+func validateArticleFormData(title string, body string) map[string]string {
+	errors := make(map[string]string)
+	// 验证标题
+	if title == "" {
+		errors["title"] = "标题不能为空"
+	} else if utf8.RuneCountInString(title) < 3 || utf8.RuneCountInString(title) > 40 {
+		errors["title"] = "标题长度需介于 3-40"
+	}
+
+	// 验证内容
+	if body == "" {
+		errors["body"] = "内容不能为空"
+	} else if utf8.RuneCountInString(body) < 10 {
+		errors["body"] = "内容长度需大于或等于 10 个字节"
+	}
+
+	return errors
 }
 
 func initDB() {
