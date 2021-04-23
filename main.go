@@ -17,7 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var router = mux.NewRouter()
+var router = route.Router
 var db *sql.DB
 
 // ArticlesFormData 创建博文表单数据
