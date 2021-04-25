@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"goblog/tests/pkg/route"
+	"goblog/pkg/route"
 	"html/template"
 	"log"
 	"net/http"
