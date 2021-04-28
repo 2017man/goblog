@@ -411,11 +411,6 @@ func main() {
 	//初始化
 	route.Initiate()
 	router = route.Router
-	// 主页
-	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
-	// 关于页
-	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
-
 	// 文章首页
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	// 文章详情
@@ -430,9 +425,6 @@ func main() {
 	router.HandleFunc("/articles/{id:[0-9]+}/delete", articlesDeleteHandler).Methods("POST").Name("articles.delete")
 	// 文章保存
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
-
-	// 自定义 404 页面
-	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 
 	//使用中间件-添加头部标识
 	router.Use(forceHTMLMiddleware)
