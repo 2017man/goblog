@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"goblog/bootstrap"
 	"goblog/pkg/database"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
-	"goblog/pkg/types"
 	"html/template"
 	"net/http"
 	"net/url"
@@ -101,34 +101,6 @@ func (a Article) Delete() (rowsAffected int64, err error) {
 	}
 
 	return 0, nil
-}
-
-func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
-	// 1.获取url参数
-	id := getRouteVariable("id", r)
-	// 2. 读取对应的文章数据
-	article, err := getArticleByID(id)
-	//3.错误处理
-	if err != nil {
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "404 文章内容没有找到")
-		} else {
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-	} else {
-		// 4. 读取成功，显示文章
-		tmpl, err := template.New("show.gohtml").
-			Funcs(template.FuncMap{
-				"RouteName2URL": route.Name2URL,
-				"Int64ToString": types.Int64ToString,
-			}).
-			ParseFiles("resources/views/articles/show.gohtml")
-		logger.LogError(err)
-		tmpl.Execute(w, article)
-	}
 }
 
 func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
@@ -369,13 +341,6 @@ func saveArticleToDB(title string, body string) (int64, error) {
 	return 0, err
 }
 
-// 封装--获取url路径参数
-func getRouteVariable(parameterName string, r *http.Request) string {
-	//获取url参数
-	vars := mux.Vars(r)
-	return vars[parameterName]
-}
-
 // 封装--通过文章id获取详情
 func getArticleByID(id string) (Article, error) {
 	article := Article{}
@@ -404,17 +369,19 @@ func validateArticleFormData(title string, body string) map[string]string {
 	return errors
 }
 
+func getRouteVariable(parameterName string, r *http.Request) string {
+	vars := mux.Vars(r)
+	return vars[parameterName]
+}
+
 func main() {
 	//数据库初始化
 	database.Initiate()
 	db = database.DB
 	//初始化
-	route.Initiate()
-	router = route.Router
+	router = bootstrap.SetupRoute()
 	// 文章首页
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
-	// 文章详情
-	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
 	// 文章创建
 	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
 	// 文章编辑页面
