@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"goblog/app/http/controllers"
 	"net/http"
 
@@ -19,5 +20,6 @@ func RegisterWebRoutes(r *mux.Router) {
 
 	//文章相关
 	ac := new(controllers.ArticlesController)
+	fmt.Println("111")
 	r.HandleFunc("/articles/{id:[0-9]+}", ac.Show).Methods("GET").Name("articles.show") // 文章详情
 }

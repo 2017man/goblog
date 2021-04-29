@@ -7,14 +7,16 @@ import (
 	"goblog/pkg/database"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
-	"html/template"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"text/template"
 	"unicode/utf8"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
 var router = route.Router
@@ -25,27 +27,6 @@ type ArticlesFormData struct {
 	Title, Body string
 	URL         *url.URL
 	Errors      map[string]string
-}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
-		fmt.Fprint(w, "<h1>Hello, 这里是 goblog</h1>")
-	} else {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
-			"<p>如有疑惑，请联系我们。</p>")
-	}
-}
-
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
-		"<p>如有疑惑，请联系我们。</p>")
-}
-
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "此博客是用以记录编程笔记，如您有反馈或建议，请联系 "+
-		"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
 }
 
 func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -373,6 +354,12 @@ func getRouteVariable(parameterName string, r *http.Request) string {
 	vars := mux.Vars(r)
 	return vars[parameterName]
 }
+
+type Product struct {
+	gorm.Model
+	Code  string
+	Price uint
+  }
 
 func main() {
 	//数据库初始化

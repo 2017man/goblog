@@ -19,9 +19,12 @@ type ArticlesController struct {
 func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 	// 1.获取url参数
 	id := route.GetRouteVariable("id", r)
-	
+
 	// 2. 读取对应的文章数据
 	article, err := article.Get(id)
+
+	fmt.Println(article, err)
+	return
 	//3.错误处理
 	if err != nil {
 		if err == sql.ErrNoRows {
