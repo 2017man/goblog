@@ -13,7 +13,6 @@ func Get(idstr string) (Article, error) {
 	fmt.Println(id, 1)
 
 	model.DB.First(&article, id)
-	fmt.Println(article)
 
 	return article, nil
 }

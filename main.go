@@ -359,7 +359,7 @@ type Product struct {
 	gorm.Model
 	Code  string
 	Price uint
-  }
+}
 
 func main() {
 	//数据库初始化
