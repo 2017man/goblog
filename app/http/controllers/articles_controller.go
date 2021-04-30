@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
 	"fmt"
 	"goblog/app/models/article"
 	"goblog/pkg/logger"
@@ -9,6 +8,8 @@ import (
 	"goblog/pkg/types"
 	"html/template"
 	"net/http"
+
+	"gorm.io/gorm"
 )
 
 //文章相关页面
@@ -25,10 +26,12 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 
 	//3.错误处理
 	if err != nil {
-		if err == sql.ErrNoRows {
+		// 3.1 数据未找到
+		if err == gorm.ErrRecordNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, "404 文章内容没有找到")
 		} else {
+			// 3.2 数据库错误
 			logger.LogError(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(w, "500 服务器内部错误")

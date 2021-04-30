@@ -12,7 +12,9 @@ func Get(idstr string) (Article, error) {
 	id := types.StringToInt(idstr)
 	fmt.Println(id, 1)
 
-	model.DB.First(&article, id)
+	if err := model.DB.First(&article, id).Error; err != nil {
+		return article, err
+	}
 
 	return article, nil
 }
