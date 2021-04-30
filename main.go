@@ -29,29 +29,7 @@ type ArticlesFormData struct {
 	Errors      map[string]string
 }
 
-func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("select * from articles")
-	defer rows.Close()
-	logger.LogError(err)
 
-	var articles []Article
-	for rows.Next() {
-		var article Article
-		// 2.1 扫描每一行的结果并赋值到一个 article 对象中
-		err := rows.Scan(&article.ID, &article.Title, &article.Body)
-		logger.LogError(err)
-		// 2.2 将 article 追加到 articles 的这个数组中
-		articles = append(articles, article)
-	}
-	// 2.3 检测遍历时是否发生错误
-	err = rows.Err()
-	logger.LogError(err)
-	// 3. 加载模板
-	tmpl, err := template.ParseFiles("resources/views/articles/index.gohtml")
-	logger.LogError(err)
-	// 4. 渲染模板，将所有文章的数据传输进去
-	tmpl.Execute(w, articles)
-}
 
 // Article 对应文章的一条模型
 type Article struct {
@@ -59,14 +37,7 @@ type Article struct {
 	ID          int64
 }
 
-func (a Article) Link() string {
-	showURL, err := router.Get("articles.show").URL("id", strconv.FormatInt(a.ID, 10))
-	if err != nil {
-		logger.LogError(err)
-		return ""
-	}
-	return showURL.String()
-}
+
 
 // Delete 方法用以从数据库中删除单条记录
 func (a Article) Delete() (rowsAffected int64, err error) {
@@ -368,8 +339,6 @@ func main() {
 	//初始化
 	bootstrap.SetupDB()
 	router = bootstrap.SetupRoute()
-	// 文章首页
-	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	// 文章创建
 	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
 	// 文章编辑页面
