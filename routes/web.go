@@ -25,4 +25,8 @@ func RegisterWebRoutes(r *mux.Router) {
 	r.HandleFunc("/articles/create", ac.Create).Methods("GET").Name("articles.create") // 文章创建
 	r.HandleFunc("/articles", ac.Store).Methods("POST").Name("articles.store")         // 文章保存
 
+	r.HandleFunc("/articles/{id:[0-9]+}/edit", ac.Edit).Methods("GET").Name("articaled.edit") // 文章编辑页面
+
+	r.HandleFunc("/articles/{id:[0-9]+}", ac.Update).Methods("POST").Name("articles.update") // 文章编辑
+
 }

@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"text/template"
 	"unicode/utf8"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -49,96 +48,6 @@ func (a Article) Delete() (rowsAffected int64, err error) {
 	}
 
 	return 0, nil
-}
-
-func articlesEditHandler(w http.ResponseWriter, r *http.Request) {
-	// 1.获取url参数
-	id := getRouteVariable("id", r)
-	// 2. 读取对应的文章数据
-	article, err := getArticleByID(id)
-	updateURL, _ := router.Get("articles.update").URL("id", id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "404 文章内容没有找到")
-		} else {
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-	} else {
-		Data := ArticlesFormData{
-			Title:  article.Title,
-			Body:   article.Body,
-			URL:    updateURL,
-			Errors: nil,
-		}
-		tmpl, err := template.ParseFiles("resources/views/articles/edit.gohtml")
-		logger.LogError(err)
-		tmpl.Execute(w, Data)
-
-	}
-
-	fmt.Fprint(w, "编辑文章页面")
-}
-
-func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
-	// 1.获取url参数
-	id := getRouteVariable("id", r)
-	// 2. 读取对应的文章数据
-	_, err := getArticleByID(id)
-	//3.如果出现错误
-	if err != nil {
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "404 文章内容没有找到")
-		} else {
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-	} else {
-		// 4. 如果未出现错误
-		// 4.1获取表单数据并验证
-		title := r.PostFormValue("title")
-		body := r.PostFormValue("body")
-
-		errors := validateArticleFormData(title, body)
-
-		if len(errors) == 0 {
-			// 4.2 表单验证通过，更新数据
-			query := "update articles set title = ?,body = ? where id = ?"
-			rs, err := db.Exec(query, title, body, id)
-			if err != nil {
-				logger.LogError(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprint(w, "500 服务器内部错误")
-			}
-			// √ 更新成功，跳转到文章详情页
-			if n, _ := rs.RowsAffected(); n > 0 {
-				showURL, _ := router.Get("articles.show").URL("id", id)
-				http.Redirect(w, r, showURL.String(), http.StatusFound)
-			} else {
-				fmt.Fprint(w, "您没有做任何更改！")
-			}
-		} else {
-			// 4.3 表单验证不通过，显示理由
-
-			updateURL, _ := router.Get("articles.update").URL("id", id)
-			data := ArticlesFormData{
-				Title:  title,
-				Body:   body,
-				URL:    updateURL,
-				Errors: errors,
-			}
-			tmpl, err := template.ParseFiles("resources/views/articles/edit.gohtml")
-			logger.LogError(err)
-
-			tmpl.Execute(w, data)
-		}
-	}
-
-	fmt.Fprint(w, "编辑文章")
 }
 
 func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -279,10 +188,6 @@ func main() {
 	bootstrap.SetupDB()
 	router = bootstrap.SetupRoute()
 
-	// 文章编辑页面
-	router.HandleFunc("/articles/{id:[0-9]+}/edit", articlesEditHandler).Methods("GET").Name("articaled.edit")
-	// 文章编辑
-	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("POST").Name("articles.update")
 	//文章删除
 	router.HandleFunc("/articles/{id:[0-9]+}/delete", articlesDeleteHandler).Methods("POST").Name("articles.delete")
 
