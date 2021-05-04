@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -116,57 +115,12 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 	})
 }
 
-// 创建数据入库
-func saveArticleToDB(title string, body string) (int64, error) {
-	//获取一个prepare 声明语句
-	stmt, err := db.Prepare("INSERT INTO articles (title, body) VALUES(?,?)")
-	//例行检查错误
-	if err != nil {
-		return 0, err
-	}
-	//关闭此链接
-	defer stmt.Close()
-
-	//插入数据
-	rs, err := stmt.Exec(title, body)
-	if err != nil {
-		return 0, err
-	}
-
-	//4.插入成功
-	id, err := rs.LastInsertId()
-	if id > 0 {
-		return id, nil
-	}
-	return 0, err
-}
-
 // 封装--通过文章id获取详情
 func getArticleByID(id string) (Article, error) {
 	article := Article{}
 	query := "SELECT * FROM articles WHERE id = ?"
 	err := db.QueryRow(query, id).Scan(&article.ID, &article.Title, &article.Body)
 	return article, err
-}
-
-// 封装--验证文章参数
-func validateArticleFormData(title string, body string) map[string]string {
-	errors := make(map[string]string)
-	// 验证标题
-	if title == "" {
-		errors["title"] = "标题不能为空"
-	} else if utf8.RuneCountInString(title) < 3 || utf8.RuneCountInString(title) > 40 {
-		errors["title"] = "标题长度需介于 3-40"
-	}
-
-	// 验证内容
-	if body == "" {
-		errors["body"] = "内容不能为空"
-	} else if utf8.RuneCountInString(body) < 10 {
-		errors["body"] = "内容长度需大于或等于 10 个字节"
-	}
-
-	return errors
 }
 
 func getRouteVariable(parameterName string, r *http.Request) string {
