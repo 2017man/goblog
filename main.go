@@ -29,15 +29,11 @@ type ArticlesFormData struct {
 	Errors      map[string]string
 }
 
-
-
 // Article 对应文章的一条模型
 type Article struct {
 	Title, Body string
 	ID          int64
 }
-
-
 
 // Delete 方法用以从数据库中删除单条记录
 func (a Article) Delete() (rowsAffected int64, err error) {
@@ -53,23 +49,6 @@ func (a Article) Delete() (rowsAffected int64, err error) {
 	}
 
 	return 0, nil
-}
-
-func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
-
-	storeURL, _ := router.Get("articles.store").URL()
-	data := ArticlesFormData{
-		Title:  "",
-		Body:   "",
-		URL:    storeURL,
-		Errors: nil,
-	}
-	tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-	if err != nil {
-		panic(err)
-	}
-
-	tmpl.Execute(w, data)
 }
 
 func articlesEditHandler(w http.ResponseWriter, r *http.Request) {
@@ -207,47 +186,6 @@ func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-
-	title := r.PostFormValue("title")
-	body := r.PostFormValue("body")
-
-	errors := validateArticleFormData(title, body)
-
-	if len(errors) == 0 {
-		fmt.Fprint(w, "验证通过!<br>")
-		fmt.Fprintf(w, "title 的值为: %v <br>", title)
-		fmt.Fprintf(w, "title 的长度为: %v <br>", utf8.RuneCountInString(title))
-		fmt.Fprintf(w, "body 的值为: %v <br>", body)
-		fmt.Fprintf(w, "body 的长度为: %v <br>", utf8.RuneCountInString(body))
-		//入库
-		lastInsertID, err := saveArticleToDB(title, body)
-		if lastInsertID > 0 {
-			fmt.Fprint(w, "插入成功，ID为"+strconv.FormatInt(lastInsertID, 10))
-		} else {
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-
-	} else {
-		storeURL, _ := router.Get("articles.store").URL()
-
-		data := ArticlesFormData{
-			Title:  title,
-			Body:   body,
-			URL:    storeURL,
-			Errors: errors,
-		}
-		tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-		if err != nil {
-			panic(err)
-		}
-
-		tmpl.Execute(w, data)
-	}
-}
-
 func forceHTMLMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 1. 设置标头
@@ -269,6 +207,7 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 	})
 }
 
+// 创建数据入库
 func saveArticleToDB(title string, body string) (int64, error) {
 	//获取一个prepare 声明语句
 	stmt, err := db.Prepare("INSERT INTO articles (title, body) VALUES(?,?)")
@@ -339,16 +278,13 @@ func main() {
 	//初始化
 	bootstrap.SetupDB()
 	router = bootstrap.SetupRoute()
-	// 文章创建
-	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
+
 	// 文章编辑页面
 	router.HandleFunc("/articles/{id:[0-9]+}/edit", articlesEditHandler).Methods("GET").Name("articaled.edit")
 	// 文章编辑
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("POST").Name("articles.update")
 	//文章删除
 	router.HandleFunc("/articles/{id:[0-9]+}/delete", articlesDeleteHandler).Methods("POST").Name("articles.delete")
-	// 文章保存
-	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
 
 	//使用中间件-添加头部标识
 	router.Use(forceHTMLMiddleware)

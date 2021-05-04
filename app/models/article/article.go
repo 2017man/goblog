@@ -7,7 +7,7 @@ import (
 
 // Article 文章模型
 type Article struct {
-	ID    int
+	ID    int64
 	Title string
 	Body  string
 }
