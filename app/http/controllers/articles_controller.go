@@ -5,11 +5,9 @@ import (
 	"goblog/app/models/article"
 	"goblog/pkg/logger"
 	"goblog/pkg/route"
-	"goblog/pkg/types"
 	"html/template"
 	"net/http"
 	"path/filepath"
-	"strconv"
 	"unicode/utf8"
 
 	"gorm.io/gorm"
@@ -63,7 +61,6 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 		tmpl, err := template.New("show.gohtml").
 			Funcs(template.FuncMap{
 				"RouteName2URL": route.Name2URL,
-				"Int64ToString": types.Int64ToString,
 			}).ParseFiles(newFile...)
 		logger.LogError(err)
 		tmpl.ExecuteTemplate(w, "app", article)
@@ -140,7 +137,7 @@ func (*ArticlesController) Store(w http.ResponseWriter, r *http.Request) {
 		}
 		_article.Create()
 		if _article.ID > 0 {
-			fmt.Fprint(w, "插入成功，ID为"+strconv.FormatInt(_article.ID, 10))
+			fmt.Fprint(w, "插入成功，ID为"+_article.GetStringID())
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(w, "500 服务器内部错误")
