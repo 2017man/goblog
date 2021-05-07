@@ -1,7 +1,6 @@
 package article
 
 import (
-	"fmt"
 	"goblog/pkg/logger"
 	"goblog/pkg/model"
 	"goblog/pkg/types"
@@ -11,7 +10,6 @@ import (
 func Get(idstr string) (Article, error) {
 	var article Article
 	id := types.StringToInt(idstr)
-	fmt.Println(id, 1)
 
 	if err := model.DB.First(&article, id).Error; err != nil {
 		return article, err
