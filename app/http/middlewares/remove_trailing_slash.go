@@ -3,7 +3,6 @@ package middlewares
 import (
 	"net/http"
 	"strings"
-
 )
 
 func RemoveTrailingSlash(next http.Handler) http.Handler {
