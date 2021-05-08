@@ -1,9 +1,13 @@
 package bootstrap
 
 import (
+	"goblog/app/models/article"
+	"goblog/app/models/user"
 	"goblog/pkg/logger"
 	"goblog/pkg/model"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // SetupDB 初始化数据库和 ORM
@@ -25,4 +29,18 @@ func SetupDB() {
 	error := sqlDb.Ping()
 	logger.LogError(error)
 
+	// 创建和维护数据表结构
+	migration(db)
+
+}
+
+//迁移
+func migration(db *gorm.DB) {
+	err := db.AutoMigrate(
+		&user.User{},
+		&article.Article{},
+	)
+	if err != nil {
+		logger.LogError(err)
+	}
 }
