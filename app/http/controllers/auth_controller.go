@@ -21,8 +21,8 @@ func (*AuthController) Register(w http.ResponseWriter, r *http.Request) {
 func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 	// 0. 初始化变量
 	name := r.PostFormValue("name")
-	email := r.PostFormValue("email")
-	password := r.PostFormValue("password")
+    email := r.PostFormValue("email")
+    password := r.PostFormValue("password")
 	// 1. 表单验证
 
 	// 2. 验证通过 —— 入库，并跳转到首页
