@@ -29,7 +29,7 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	// 4. 开始验证
 	errs := requests.ValidateRegistrationForm(_user)
-
+	
 	if len(errs) > 0 {
 		// 4.1 有错误发生，打印数据
 		// data, _ := json.MarshalIndent(errs, "", "  ")
