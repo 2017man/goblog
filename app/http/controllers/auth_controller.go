@@ -29,7 +29,7 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	// 4. 开始验证
 	errs := requests.ValidateRegistrationForm(_user)
-	
+
 	if len(errs) > 0 {
 		// 4.1 有错误发生，打印数据
 		// data, _ := json.MarshalIndent(errs, "", "  ")
@@ -47,5 +47,15 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, "创建用户失败，请联系管理员")
 		}
 	}
+
+}
+
+// Login 登录
+func (*AuthController) Login(w http.ResponseWriter, r *http.Request) {
+	view.RenderSimple(w, view.D{}, "auth.login")
+}
+
+// DoLogin 处理登录逻辑
+func (*AuthController) DoLogin(w http.ResponseWriter, r *http.Request) {
 
 }
